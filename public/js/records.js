@@ -9,7 +9,7 @@ function template_for_rows(rows, limit) {
     return template_for_error(rows);
   }
   var headers = header(rows);
-  var html = '<table class="rows">' +
+  var html = '<table class="pure-table pure-table-striped rows">' +
     '<thead><tr>';
   for (var i in headers) {
     html += '<th>' + headers[i] + '</th>';
@@ -33,9 +33,10 @@ function template(records) {
   var html = '';
   for (var i in records) {
     html += '<div class="record">' +
-      '<h2>' + records[i]['name'] + '</h2>' +
-      '<div class="created_at">' + records[i]['created_at'] + '</div>' +
-      '<pre class="query">' + records[i]['query'] + '</pre>' +
+      '<h2>' + records[i]['name'] + '&nbsp;' +
+        '<time class="timeago created_at" datetime="' + records[i]['created_at'] + '">' + records[i]['created_at'] + '</time>' +
+      '</h2>' +
+      '<div class="query-container"><pre class="query">' + records[i]['query'] + '</pre></div>' +
       '<div class="result">' +
         template_for_rows(JSON.parse(records[i]['result']), 100) +
       '</div>' +
@@ -45,6 +46,7 @@ function template(records) {
 }
 function render(data) {
   $('#records').prepend(template(data));
+  $('.timeago').timeago();
 }
 function load() {
   $.getJSON('/all')
