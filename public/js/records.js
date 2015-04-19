@@ -1,5 +1,5 @@
 function template_for_error(result) {
-  return '<div class="error">' + result['error'] + '</div>';
+  return '<pre class="error">' + result['error'] + '</pre>';
 }
 function header(rows) {
   return Object.keys(rows[0]);

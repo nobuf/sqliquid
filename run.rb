@@ -55,9 +55,7 @@ begin
         result = db.fetch_all_json(query)
       rescue PG::Error => e
         puts e.inspect
-        # XXX better error message
-        result = {error: e.result
-          .error_field(PG::Result::PG_DIAG_MESSAGE_PRIMARY)}.to_json
+        result = {error: e.result.error_message}.to_json
         db.clear
       end
 
