@@ -83,7 +83,7 @@ begin
       kick_web_server
     end
   end
-rescue SystemExit, Interrupt
+rescue
   # stop web server
   unless web_server_pid.nil?
     Process.kill 'SIGKILL', web_server_pid

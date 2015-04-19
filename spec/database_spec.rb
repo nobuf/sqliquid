@@ -13,7 +13,7 @@ describe Database do
   describe "#fetch_all" do
     before(:each) do
       db.exec(%Q[
-        create table hello (
+        create table if not exists hello (
           id integer
         );
         insert into hello values(1), (2);
@@ -34,6 +34,17 @@ describe Database do
       db.fetch_all('select * from hello order by id desc limit 1') {|row| row }
       db.fetch_all('select * from hello order by id desc limit 1') do |row|
         expect(row).to eq({'id' => '2'})
+      end
+    end
+
+    context "disconnected" do
+      before(:each) do
+        db.close
+      end
+      it "reconnects and returns results" do
+        db.fetch_all('select * from hello order by id desc limit 1') do |row|
+          expect(row).to eq({'id' => '2'})
+        end
       end
     end
   end

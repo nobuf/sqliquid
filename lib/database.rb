@@ -11,12 +11,12 @@ class Database
   end
 
   def initialize(connection_string)
+    @connection_string = connection_string
     @connection = PG::Connection.new(connection_string)
-    @ping = PG::Connection.ping(connection_string)
   end
 
   def connected?
-    @ping == PG::PQPING_OK
+    PG::Connection.ping(@connection_string) == PG::PQPING_OK
   end
 
   def exec(sql)
@@ -27,9 +27,21 @@ class Database
     @connection.get_result # command end
   end
 
+  def close
+    @connection.close
+  end
+
   def fetch_all(sql)
-    # TODO use em-pg-client?
-    @connection.send_query(sql)
+    2.times do
+      begin
+        # TODO use em-pg-client?
+        @connection.send_query(sql)
+        break
+      rescue PG::ConnectionBad
+        @connection = PG::Connection.new(@connection_string)
+        next
+      end
+    end
     @connection.set_single_row_mode
     @connection.get_result.stream_each do |row|
       yield(row)

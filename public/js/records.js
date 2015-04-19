@@ -34,7 +34,9 @@ function template(records) {
   for (var i in records) {
     html += '<div class="record">' +
       '<h2>' + records[i]['name'] + '&nbsp;' +
-        '<time class="timeago created_at" datetime="' + records[i]['created_at'] + '">' + records[i]['created_at'] + '</time>' +
+        '<time class="timeago created_at" datetime="' + records[i]['created_at'] + '">' +
+          records[i]['created_at'] +
+        '</time>' +
       '</h2>' +
       '<div class="query-container"><pre class="query">' + records[i]['query'] + '</pre></div>' +
       '<div class="result">' +
