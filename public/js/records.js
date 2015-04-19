@@ -52,7 +52,14 @@ function load() {
   $.getJSON('/all')
     .done(render);
 }
+function bindStream() {
+  var es = new EventSource('/stream');
+  es.onmessage = function(e) {
+    render(JSON.parse(e.data));
+  };
+}
 
 (function(){
   load();
+  bindStream();
 })();

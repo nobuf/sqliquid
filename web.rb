@@ -1,8 +1,10 @@
 require 'sinatra'
 require 'sinatra/json'
+require 'sinatra/streaming'
 require 'sqlite3'
+require 'json'
 require './lib/helper.rb'
-set server: 'thin', connection: []
+set server: 'thin', connections: []
 set :public_folder, File.join(__dir__, 'public')
 
 include Helper
@@ -16,10 +18,28 @@ get '/all' do
   storage = connect_storage
   storage.results_as_hash = true
   storage.execute('select * from records order by id desc') do |row|
-    results << row
-      .select {|k, v| ['id', 'name', 'query', 'result', 'created_at'].include?(k) }
+    results << get_record(row)
   end
   json results
+end
+
+get '/stream', provides: 'text/event-stream' do
+  stream :keep_open do |out|
+    settings.connections << out
+    out.callback { settings.connections.delete(out) }
+  end
+end
+
+post '/' do
+  last_record = []
+  storage = connect_storage
+  storage.results_as_hash = true
+  storage.execute('select * from records order by id desc limit 1') do |row|
+    last_record << get_record(row)
+  end
+  settings.connections
+    .each { |out| out << "data: #{last_record.to_json}\n\n" }
+  204
 end
 
 __END__

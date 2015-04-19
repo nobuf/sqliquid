@@ -23,6 +23,10 @@ class Database
     @connection.exec(sql)
   end
 
+  def clear
+    @connection.get_result # command end
+  end
+
   def fetch_all(sql)
     # TODO use em-pg-client?
     @connection.send_query(sql)
@@ -30,7 +34,7 @@ class Database
     @connection.get_result.stream_each do |row|
       yield(row)
     end
-    @connection.get_result # command end
+    clear
   end
 
   def fetch_all_json(sql)

@@ -55,8 +55,10 @@ begin
         result = db.fetch_all_json(query)
       rescue PG::Error => e
         puts e.inspect
+        # XXX better error message
         result = {error: e.result
           .error_field(PG::Result::PG_DIAG_MESSAGE_PRIMARY)}.to_json
+        db.clear
       end
 
       created_at = Time.now.to_s
@@ -66,6 +68,8 @@ begin
           values(?, ?, ?, ?)
         ],
         [name, query, result, created_at]
+
+      kick_web_server
     end
   end
 rescue SystemExit, Interrupt
