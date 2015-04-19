@@ -1,9 +1,22 @@
+require 'optparse'
 require 'filewatcher'
 require 'sqlite3'
 require './lib/helper.rb'
 require './lib/database.rb'
 
 include Helper
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = 'Usage: ruby run.rb [options]'
+
+  opts.on('-s', '--with-webserver', 'Run a web server') do |s|
+    options[:with_webserver] = true
+  end
+  opts.on('-d', '--dir DIR', 'Directory to watch') do |dir|
+    options[:dir] = dir
+  end
+end.parse!
 
 storage = connect_storage
 
@@ -17,14 +30,8 @@ storage.execute %Q[
   );
 ]
 
-dir = ARGV.first
-if dir.nil?
-  STDERR.puts 'usage: ruby run.rb <directory to watch>'
-  exit(1)
-end
-
-unless Dir.exists?(dir)
-  STDERR.puts "#{dir} does not exist."
+unless Dir.exists?(options[:dir])
+  STDERR.puts "#{options[:dir]} does not exist."
   exit(1)
 end
 
@@ -41,8 +48,14 @@ unless db.connected?
   exit(1)
 end
 
-sql_files = File.join(dir, '**', '*.sql')
+sql_files = File.join(options[:dir], '**', '*.sql')
 puts "watching... #{sql_files}"
+
+if options[:with_webserver]
+  web_server_pid = fork do
+    exec 'ruby web.rb'
+  end
+end
 
 begin
   FileWatcher.new(sql_files).watch do |file_path, event|
@@ -72,6 +85,10 @@ begin
   end
 rescue SystemExit, Interrupt
   # stop web server
+  unless web_server_pid.nil?
+    Process.kill 'SIGKILL', web_server_pid
+    Process.wait web_server_pid
+  end
   puts
   puts "bye!"
 end
