@@ -60,6 +60,10 @@ __END__
   </head>
   <body>
     <%= yield %>
+    <footer>
+      <p>sqliquid runs query right after you saved a SQL file, and displays the result here without reloading a browser.</p>
+      <p><a href="https://github.com/nobuf/sqliquid/issues">&#10084; bug report</a></p>
+    </footer>
     <script src="/js/jquery-2.1.3.min.js"></script>
     <script src="/js/jquery.timeago.min.js"></script>
     <script src="/js/records.js"></script>
