@@ -2,10 +2,10 @@ require './lib/database.rb'
 
 describe Database do
   # TODO use config
-  let!(:db) { Database.connect('dbname=sqliquid_test port=5432') }
-  describe "#connect" do
+  let!(:db) { Database.new('dbname=sqliquid_test port=5432') }
+  describe "#ping" do
     it "connects to a database" do
-      expect(db.connected?)
+      expect(db.ping?)
         .to be true
     end
   end
@@ -26,26 +26,27 @@ describe Database do
 
     it "returns two values" do
       db.fetch_all('select * from hello order by id desc limit 1') do |row|
-        expect(row).to eq({'id' => '2'})
+        expect(row.class).to be PG::Result
       end
     end
 
     it "returns results for the second query as well" do
       db.fetch_all('select * from hello order by id desc limit 1') {|row| row }
       db.fetch_all('select * from hello order by id desc limit 1') do |row|
-        expect(row).to eq({'id' => '2'})
+        expect(row.class).to be PG::Result
       end
     end
 
-    context "disconnected" do
-      before(:each) do
-        db.close
-      end
-      it "reconnects and returns results" do
-        db.fetch_all('select * from hello order by id desc limit 1') do |row|
-          expect(row).to eq({'id' => '2'})
-        end
-      end
-    end
+    # TODO not sure how to test connection timed out or disconnected
+    # context "disconnected" do
+    #   before(:each) do
+    #     db.close
+    #   end
+    #   it "reconnects and returns results" do
+    #     db.fetch_all('select * from hello order by id desc limit 1') do |row|
+    #        expect(row.class).to be PG::Result
+    #     end
+    #   end
+    # end
   end
 end

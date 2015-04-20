@@ -6,7 +6,9 @@ require './lib/database.rb'
 
 include Helper
 
-options = {}
+options = {
+  dir: '.'
+}
 OptionParser.new do |opts|
   opts.banner = 'Usage: ruby run.rb [options]'
 
@@ -41,9 +43,9 @@ if ENV['SQLIQUID_DATABASE'].nil?
 end
 
 puts "connecting to the database..."
-db = Database.connect(ENV['SQLIQUID_DATABASE'])
+db = Database.new(ENV['SQLIQUID_DATABASE'])
 
-unless db.connected?
+unless db.ping?
   STDERR.puts "couldn't connect to '#{ENV['SQLIQUID_DATABASE']}'."
   exit(1)
 end
@@ -63,27 +65,33 @@ begin
       name = File.basename(file_path, '.sql')
       query = File.read(file_path)
       puts query
-      begin
-        # TODO reconnect if it's dropped
-        result = db.fetch_all_json(query)
-      rescue PG::Error => e
-        puts e.inspect
-        result = {error: e.result.error_message}.to_json
-        db.clear
-      end
 
       created_at = Time.now.to_s
 
       storage.execute %Q[
-        insert into records (name, query, result, created_at)
-          values(?, ?, ?, ?)
+        insert into records (name, query, created_at)
+          values(?, ?, ?)
         ],
-        [name, query, result, created_at]
+        [name, query, created_at]
 
-      kick_web_server
+      id = storage.last_insert_row_id
+
+      db.fetch_all(query, -> { kick_web_server }) do |result|
+        unless result.is_a?(Hash)
+          result = Array(result)
+        end
+        result = result.to_json
+        storage.execute %Q[
+          update records set result = ?
+          where id = ?
+        ], [result, id]
+        kick_web_server(id)
+      end
     end
   end
-rescue
+rescue => e
+  puts e.inspect
+  puts e.backtrace.join("\n")
   # stop web server
   unless web_server_pid.nil?
     Process.kill 'SIGKILL', web_server_pid

@@ -5,7 +5,9 @@ function header(rows) {
   return Object.keys(rows[0]);
 }
 function template_for_rows(rows, limit) {
-  if (rows['error']) {
+  if (!rows) {
+    return 'fetching data...';
+  } else if (rows['error']) {
     return template_for_error(rows);
   }
   var headers = header(rows);
@@ -29,25 +31,31 @@ function template_for_rows(rows, limit) {
   html += '</tbody></table>';
   return html;
 }
-function template(records) {
-  var html = '';
-  for (var i in records) {
-    html += '<div class="record">' +
-      '<h2>' + records[i]['name'] + '&nbsp;' +
-        '<time class="timeago created_at" datetime="' + records[i]['created_at'] + '">' +
-          records[i]['created_at'] +
-        '</time>' +
-      '</h2>' +
-      '<div class="query-container"><pre class="query">' + records[i]['query'] + '</pre></div>' +
-      '<div class="result">' +
-        template_for_rows(JSON.parse(records[i]['result']), 100) +
-      '</div>' +
-    '</div>';
-  }
-  return html;
+function template(record) {
+  return '<div class="record" id="record-' + record['id'] + '">' +
+    '<h2>' + record['name'] + '&nbsp;' +
+      '<time class="timeago created_at" datetime="' + record['created_at'] + '">' +
+        record['created_at'] +
+      '</time>' +
+    '</h2>' +
+    '<div class="query-container"><pre class="query">' + record['query'] + '</pre></div>' +
+    '<div class="result">' +
+      template_for_rows(JSON.parse(record['result']), 100) +
+    '</div>' +
+  '</div>';
 }
 function render(data) {
-  $('#records').prepend(template(data));
+  var $records = $('#records');
+  for (var i in data) {
+    var id = data[i]['id'];
+    var $record = $('#record-' + id)
+    if ($record.length > 0) {
+      $record.find('.result')
+        .html(template_for_rows(JSON.parse(data[i]['result']), 100))
+    } else {
+      $records.prepend(template(data[i]))
+    }
+  }
   $('.timeago').timeago();
 }
 function load() {

@@ -17,7 +17,7 @@ get '/all' do
   results = []
   storage = connect_storage
   storage.results_as_hash = true
-  storage.execute('select * from records order by id desc') do |row|
+  storage.execute('select * from records order by id') do |row|
     results << get_record(row)
   end
   json results
@@ -31,14 +31,20 @@ get '/stream', provides: 'text/event-stream' do
 end
 
 post '/' do
-  last_record = []
+  record = []
   storage = connect_storage
   storage.results_as_hash = true
-  storage.execute('select * from records order by id desc limit 1') do |row|
-    last_record << get_record(row)
+  if params[:id].nil?
+    storage.execute('select * from records order by id desc limit 1') do |row|
+      record << get_record(row)
+    end
+  else
+    storage.execute('select * from records where id = ?', params[:id]) do |row|
+      record << get_record(row)
+    end
   end
   settings.connections
-    .each { |out| out << "data: #{last_record.to_json}\n\n" }
+    .each { |out| out << "data: #{record.to_json}\n\n" }
   204
 end
 

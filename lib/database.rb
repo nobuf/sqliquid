@@ -1,4 +1,4 @@
-require 'pg'
+require 'pg/em'
 require 'json'
 
 class Database
@@ -6,16 +6,17 @@ class Database
 
   CONNECTION_OK = PG::CONNECTION_OK
 
-  def self.connect(connection_string)
-    Database.new(connection_string)
-  end
-
   def initialize(connection_string)
     @connection_string = connection_string
-    @connection = PG::Connection.new(connection_string)
+    connect
   end
 
-  def connected?
+  def connect
+    @connection = PG::EM::Client.new(@connection_string)
+    @connection.async_autoreconnect = true
+  end
+
+  def ping?
     PG::Connection.ping(@connection_string) == PG::PQPING_OK
   end
 
@@ -23,37 +24,33 @@ class Database
     @connection.exec(sql)
   end
 
-  def clear
-    @connection.get_result # command end
-  end
-
   def close
     @connection.close
   end
 
-  def fetch_all(sql)
-    2.times do
-      begin
-        # TODO use em-pg-client?
-        @connection.send_query(sql)
-        break
-      rescue PG::ConnectionBad
-        @connection = PG::Connection.new(@connection_string)
-        next
-      end
-    end
-    @connection.set_single_row_mode
-    @connection.get_result.stream_each do |row|
-      yield(row)
-    end
-    clear
+  def reconnect
+    close
+    connect
   end
 
-  def fetch_all_json(sql)
-    results = []
-    fetch_all(sql) do |row|
-      results << row
+  def fetch_all(sql, callback = nil)
+    EM.run do
+      Fiber.new do
+        begin
+          @connection.query(sql) do |row|
+            yield(row)
+          end
+        rescue => e
+          puts e.inspect
+          yield({error: e.result.nil? ? e.message : e.result.error_message})
+          # TODO better error handling
+          # reconnect
+        end
+        EM.stop
+      end.resume
+      unless callback.nil?
+        callback.call
+      end
     end
-    results.to_json
   end
 end

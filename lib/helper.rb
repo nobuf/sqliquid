@@ -7,9 +7,13 @@ module Helper
     SQLite3::Database.new File.join(__dir__, '../db/sqliquid.db')
   end
 
-  def kick_web_server
+  def kick_web_server(id = nil)
     uri = URI('http://localhost:4567/')
-    Net::HTTP.post_form(uri, {})
+    if id.nil?
+      Net::HTTP.post_form(uri, {})
+    else
+      Net::HTTP.post_form(uri, {id: id})
+    end
   end
 
   def get_record(row)
