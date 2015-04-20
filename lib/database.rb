@@ -6,14 +6,16 @@ class Database
 
   CONNECTION_OK = PG::CONNECTION_OK
 
-  def initialize(connection_string)
+  def initialize(connection_string, timeout = 10)
     @connection_string = connection_string
+    @timeout = 10
     connect
   end
 
   def connect
     @connection = PG::EM::Client.new(@connection_string)
     @connection.async_autoreconnect = true
+    @connection.query_timeout = @timeout
   end
 
   def ping?
@@ -45,8 +47,9 @@ class Database
           yield({error: e.result.nil? ? e.message : e.result.error_message})
           # TODO better error handling
           # reconnect
+        ensure
+          EM.stop
         end
-        EM.stop
       end.resume
       unless callback.nil?
         callback.call
