@@ -33,6 +33,16 @@ Continuous development for sql lovers.
 5. Open a browser, go to `http://localhost:4567/`
 6. Edit and save SQL files, see the result on the browser.
 
+## Update
+
+        # stop the process with Ctrl-C
+        git pull origin master
+        bundle install
+
+## Troubleshoot
+
+1. Remove `db/sqliquid.db` and restart the process
+
 ## License
 
 sqliquid is released under the [MIT License](http://www.opensource.org/licenses/MIT).

@@ -1,4 +1,5 @@
 require 'net/http'
+require 'pg_query'
 
 module Helper
   # TODO config
@@ -22,5 +23,15 @@ module Helper
                         'query',
                         'result',
                         'created_at'].include?(k) }
+  end
+
+  def add_limit(query, limit)
+    # TODO this doesn't work multiple queries in `query`
+    parse_tree = PgQuery.parse(query)
+    if parse_tree.parsetree.last['SELECT']['limitCount'].nil?
+      query + " limit #{limit.to_i}"
+    else
+      query
+    end
   end
 end

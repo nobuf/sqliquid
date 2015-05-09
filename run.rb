@@ -18,6 +18,9 @@ OptionParser.new do |opts|
   opts.on('-d', '--dir DIR', 'Directory to watch') do |dir|
     options[:dir] = dir
   end
+  opts.on('-l', '--limit [LIMIT]', 'Default `LIMIT` for all queries') do |limit|
+    options[:limit] = limit.nil? ? 100 : limit.to_i
+  end
 end.parse!
 
 storage = connect_storage
@@ -64,6 +67,11 @@ begin
     if event == :new || event == :changed
       name = File.basename(file_path, '.sql')
       query = File.read(file_path)
+
+      if options[:limit]
+        query = add_limit(query, options[:limit])
+      end
+
       puts query
 
       created_at = Time.now.to_s

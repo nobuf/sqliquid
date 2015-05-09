@@ -13,6 +13,8 @@ GEM
     json (1.8.2)
     multi_json (1.11.0)
     pg (0.18.1)
+    pg_query (0.5.0)
+      json (~> 1.8)
     rack (1.6.0)
     rack-protection (1.5.3)
       rack
@@ -58,6 +60,7 @@ DEPENDENCIES
   filewatcher
   json
   pg
+  pg_query
   rspec
   sinatra
   sinatra-contrib
