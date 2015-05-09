@@ -35,9 +35,9 @@ Continuous development for sql lovers.
 
 ## Update
 
-        # stop the process with Ctrl-C
-        git pull origin master
-        bundle install
+    # stop the process with Ctrl-C
+    git pull origin master
+    bundle install
 
 ## Troubleshoot
 
