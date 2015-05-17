@@ -2,6 +2,8 @@
 
 Continuous development for sql lovers.
 
+![Intro](intro.gif)
+
 ## Getting Started
 
 ### OX 10.10.2+
