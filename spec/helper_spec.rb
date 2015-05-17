@@ -24,5 +24,14 @@ describe Helper do
       ] }
       it { expect(add_limit(q1, 10)).not_to eq q1 }
     end
+
+    context "with syntax error" do
+      let(:q1) { %Q[
+        select 1
+        from examples
+        ,
+      ] }
+      it { expect(add_limit(q1, 10)).to eq q1 }
+    end
   end
 end

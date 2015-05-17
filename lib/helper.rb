@@ -27,11 +27,14 @@ module Helper
 
   def add_limit(query, limit)
     # TODO this doesn't work multiple queries in `query`
-    parse_tree = PgQuery.parse(query)
-    if parse_tree.parsetree.last['SELECT']['limitCount'].nil?
-      query + " limit #{limit.to_i}"
-    else
-      query
+    begin
+      parse_tree = PgQuery.parse(query)
+      if parse_tree.parsetree.last['SELECT']['limitCount'].nil?
+        return query + " limit #{limit.to_i}"
+      end
+    rescue PgQuery::ParseError => e
+      puts e.class.name + ': ' + e.message
     end
+    query
   end
 end
